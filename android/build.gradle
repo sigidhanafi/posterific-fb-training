@@ -15,7 +15,14 @@ buildscript {
 project(':react-native-fbsdk') {
     configurations.all {
         resolutionStrategy {
-            force 'com.facebook.android:facebook-android-sdk:4.22.1'
+            force 'com.facebook.android:account-kit-sdk:4.23.0'
+        }
+    }
+}
+
+project(':react-native-facebook-account-kit') {
+    configurations.all {
+        resolutionStrategy {
             force 'com.facebook.android:account-kit-sdk:4.23.0'
         }
     }

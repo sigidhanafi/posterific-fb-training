@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import { Image, View, StyleSheet, Text, ToastAndroid } from 'react-native';
 import { Container, Content, Header, Left, Button, Icon, Body, Title } from 'native-base';
 import PosterModel from '../Model/PosterModel';
-import AccountKit from 'react-native-facebook-account-kit';
+import AccountKit, { LoginButton } from 'react-native-facebook-account-kit';
+import NativeBaseAccountKitLoginButton from './NativeBaseAccountKitLoginButton'
 
 export default class CheckoutScreen extends React.Component {
 
@@ -24,6 +25,11 @@ export default class CheckoutScreen extends React.Component {
   }
 
   componentWillMount () {
+    AccountKit.configure({
+      countryWhitelist: ['ID', 'US', 'CA'],
+      defaultCountry: 'ID',
+      title: 'My Posterific App'
+    })
     AccountKit.getCurrentAccessToken()
     .then((token) => {
       if (token) {
@@ -77,23 +83,75 @@ export default class CheckoutScreen extends React.Component {
               </View>
             </View>
 
-            <Button
-              info
-              iconRight
-              block
-              rounded
-              style={{ margin: 10 }}
-              onPress={() => {
-                this.loginWithEmail();
-              }}
-            >
-              <Text style={[styles.btnText]}>Login with Email</Text>
-            </Button>
+            {
+              this.state.loggedAccount ? this.renderUserDetails() : this.renderLoginUi()
+            }
 
           </Content>
         </Container>
       </Image>
     )
+  }
+
+  renderLoginUi () {
+    return (
+      <View>
+        <Button
+          info
+          iconRight
+          block
+          rounded
+          style={{ margin: 10 }}
+          onPress={() => {
+            this.loginWithEmail();
+          }}
+        >
+          <Text style={[styles.btnText]}>Login with Email</Text>
+          <Icon name='md-mail' />
+        </Button>
+        <NativeBaseAccountKitLoginButton
+          style={{ margin: 10 }}
+          type='phone'
+          onLogin={(token) => this.onLoginSuccess(token)}
+          onError={(e) => this.onLoginError(e)}
+          >
+          <Text>Login with SMS</Text>
+          <Icon name='md-phone-potrait' />
+        </NativeBaseAccountKitLoginButton>
+      </View>
+    )
+  }
+
+  renderUserDetails () {
+    const { id, email, phoneNumber } = this.state.loggedAccount
+    return (
+      <View>
+        <Text style={[styles.btnText]}>Account Kit User : { id }</Text>
+        <Text style={[styles.btnText]}>Account Kit Email : { email }</Text>
+        { (phoneNumber)
+          ? <Text style={[styles.btnText]}>Account Kit Email : { phoneNumber.countryCode } { phoneNumber.number }</Text>
+          : null
+        }
+        <Button
+          onPress={() => {
+            this.logout();
+          }}
+        >
+          <Text style={[styles.btnText]}>Logout</Text>
+        </Button>
+      </View>
+    )
+  }
+
+  logout () {
+    AccountKit.logout()
+    .then(() => {
+      this.setState({
+        authToken: null,
+        loggedAccount: null
+      })
+    })
+    .catch((e) => console.log('logout failed'))
   }
 
   logUserPurchase() {
